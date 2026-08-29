@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.outofcontrol" path="/org/gnome/shell/extensions/outofcontrol/">
+    <key name="toggle-shortcut" type="as">
+      <default><![CDATA[['<Super><Shift>a']]]></default>
+      <summary>Toggle OutOfControl overlay</summary>
+    </key>
+    <key name="api-base" type="s">
+      <default>'http://127.0.0.1:8000'</default>
+      <summary>OutOfControl API base URL</summary>
+    </key>
+    <key name="session-id" type="s">
+      <default>'gnome'</default>
+      <summary>Agent session id for the desktop UI</summary>
+    </key>
+  </schema>
+</schemalist>

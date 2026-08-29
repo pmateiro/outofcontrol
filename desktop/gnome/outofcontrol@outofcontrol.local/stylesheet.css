@@ -1,0 +1,68 @@
+/* OutOfControl GNOME overlay */
+
+.ooc-dialog {
+  spacing: 12px;
+}
+
+.ooc-box {
+  background-color: rgba(24, 24, 28, 0.96);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 16px;
+  min-width: 560px;
+  max-width: 720px;
+}
+
+.ooc-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: #f4f4f5;
+}
+
+.ooc-status {
+  font-size: 11px;
+  color: #a1a1aa;
+}
+
+.ooc-entry {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #fafafa;
+  caret-color: #fafafa;
+  selected-color: #111;
+  selected-bg-color: #93c5fd;
+}
+
+.ooc-reply {
+  color: #e4e4e7;
+  font-size: 13px;
+}
+
+.ooc-pending {
+  background-color: rgba(250, 204, 21, 0.12);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: 10px;
+  padding: 10px;
+  color: #fde68a;
+}
+
+.ooc-btn {
+  border-radius: 8px;
+  padding: 6px 12px;
+}
+
+.ooc-btn-primary {
+  background-color: #2563eb;
+  color: white;
+}
+
+.ooc-btn-danger {
+  background-color: rgba(239, 68, 68, 0.85);
+  color: white;
+}
+
+.ooc-btn-muted {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #e4e4e7;
+}

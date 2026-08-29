@@ -1,16 +1,20 @@
 [Unit]
 Description=OutOfControl local agent API (GNOME copilot backend)
-After=network-online.target
+After=graphical-session.target network-online.target
 Wants=network-online.target
+PartOf=graphical-session.target
 
 [Service]
 Type=simple
 WorkingDirectory=%h/.local/share/outofcontrol/app
 Environment=PATH=%h/.local/share/outofcontrol/venv/bin:/usr/bin
+Environment=OOC_ASKPASS=%h/.local/share/outofcontrol/app/desktop/askpass/ooc-askpass
+Environment=SUDO_ASKPASS=%h/.local/share/outofcontrol/app/desktop/askpass/ooc-askpass
+Environment=SUDO_ASKPASS_REQUIRE=force
 EnvironmentFile=-%h/.config/outofcontrol/env
-ExecStart=%h/.local/share/outofcontrol/venv/bin/outofcontrol serve --host 127.0.0.1 --port 8000
+ExecStart=%h/.local/share/outofcontrol/app/desktop/outofcontrol-daemon.sh
 Restart=on-failure
 RestartSec=3
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target

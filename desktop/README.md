@@ -9,12 +9,14 @@ Desktop copilot: GNOME Shell overlay + local OutOfControl API.
 - Overlay: ask, use clipboard as context, reset session
 - **Allow / Deny** for pending confirmations (`confirm_action`)
 - Backend: `outofcontrol serve` as a **systemd --user** service on `127.0.0.1:8000`
+- **sudo**: after you click Allow, a graphical password dialog (zenity askpass) runs — the daemon has no TTY
 
 ## Requirements
 
 - GNOME Shell 45–50
 - Python 3.11+
 - `glib-compile-schemas`, `rsync`, `systemctl --user`
+- `zenity` (recommended) for sudo password prompts
 
 ## Install
 
@@ -64,6 +66,34 @@ desktop/
 - `GET /health`
 
 Session id default: `gnome`.
+
+## sudo / privileged commands
+
+OutOfControl **Allow** ≠ Linux root. The daemon has no terminal, so plain `sudo` fails even after you approve.
+
+Default flow after this update:
+
+1. You click **Allow** in the overlay  
+2. The agent runs `sudo -A …` with `desktop/askpass/ooc-askpass`  
+3. **zenity** asks for your password in a GUI dialog  
+4. The command continues
+
+```bash
+sudo apt install zenity
+./desktop/install-gnome.sh
+systemctl --user restart outofcontrol.service
+```
+
+### Optional: no password after Allow (advanced)
+
+Only if you accept the risk. Create a **narrow** sudoers drop-in (visudo):
+
+```sudoers
+# /etc/sudoers.d/outofcontrol — EXAMPLE only; list exact binaries you trust
+pedro ALL=(root) NOPASSWD: /usr/bin/apt, /usr/bin/systemctl
+```
+
+Prefer askpass over broad NOPASSWD.
 
 ## Uninstall (manual)
 

@@ -226,19 +226,41 @@ class CopilotDialog extends ModalDialog.ModalDialog {
 
     async _confirm(token, approve) {
         this._setStatus(approve ? 'approving…' : 'denying…');
+        this._setReply(
+            approve
+                ? 'Approved. Closing briefly so the password dialog can appear in front…'
+                : 'Denying…'
+        );
+        this._renderPending([]);
+
+        // ModalDialog steals focus and stays above zenity/pkexec — release it first.
+        this.close();
+        await this._waitMs(200);
+
         try {
             const data = await this._postJson('/v1/confirm', {
                 confirmation_token: token,
                 approve,
                 session_id: this._sessionId(),
             });
+            this.openDialog();
             this._setReply(data.reply || '');
             this._renderPending(data.pending_confirmations || []);
             this._setStatus(this._pending.length ? 'awaiting confirmation' : 'done');
         } catch (e) {
+            this.openDialog();
             this._setReply(`Confirm failed: ${e}`);
             this._setStatus('error');
         }
+    }
+
+    _waitMs(ms) {
+        return new Promise(resolve => {
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
+                resolve();
+                return GLib.SOURCE_REMOVE;
+            });
+        });
     }
 
     async _resetSession() {

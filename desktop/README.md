@@ -73,10 +73,10 @@ OutOfControl **Allow** ≠ Linux root. The daemon has no terminal, so plain `sud
 
 Default flow after this update:
 
-1. You click **Allow** in the overlay  
+1. You click **Allow** in the overlay (the overlay closes briefly so the password dialog can stay in front)  
 2. The agent runs `sudo -A …` with `desktop/askpass/ooc-askpass`  
 3. **zenity** asks for your password in a GUI dialog  
-4. The command continues
+4. The overlay reopens with the result  
 
 ```bash
 sudo apt install zenity

@@ -43,6 +43,10 @@ class Settings(BaseSettings):
     )
     calendar_path: Path = Path("data/calendar.json")
     memory_path: Path = Path("data/memory.json")
+    tasks_path: Path = Path("data/tasks.json")
+    knowledge_dir: Path = Path("docs")
+    github_repo: str | None = None  # owner/name default for GitHub tools
+    browser_enabled: bool = True
     system_prompt_extra: str = ""
 
     @classmethod
@@ -77,6 +81,18 @@ class Settings(BaseSettings):
 
     def resolve_memory_path(self) -> Path:
         p = self.memory_path
+        if not p.is_absolute():
+            p = self.resolve_workspace() / p
+        return p.resolve()
+
+    def resolve_tasks_path(self) -> Path:
+        p = self.tasks_path
+        if not p.is_absolute():
+            p = self.resolve_workspace() / p
+        return p.resolve()
+
+    def resolve_knowledge_dir(self) -> Path:
+        p = self.knowledge_dir
         if not p.is_absolute():
             p = self.resolve_workspace() / p
         return p.resolve()

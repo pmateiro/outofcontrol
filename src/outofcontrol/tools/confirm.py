@@ -95,3 +95,25 @@ def delete_file_executor(workspace: Path) -> Executor:
         return ToolResult(ok=True, output=f"Deleted {rel}")
 
     return execute
+
+
+def github_pr_merge_executor() -> Executor:
+    def execute(payload: dict[str, Any]) -> ToolResult:
+        import shutil
+        import subprocess
+
+        number = payload["number"]
+        repo = payload.get("repo")
+        method = payload.get("method") or "squash"
+        if method not in {"squash", "merge", "rebase"}:
+            method = "squash"
+        if not shutil.which("gh"):
+            return ToolResult(ok=False, output="gh CLI required to merge PR")
+        args = ["gh", "pr", "merge", str(number), f"--{method}"]
+        if repo:
+            args += ["--repo", repo]
+        proc = subprocess.run(args, capture_output=True, text=True, timeout=120)
+        out = ((proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")).strip()
+        return ToolResult(ok=proc.returncode == 0, output=out or "(no output)")
+
+    return execute

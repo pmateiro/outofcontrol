@@ -13,4 +13,6 @@ config.yaml
 *.log
 data/calendar.json
 data/memory.json
+data/tasks.json
+data/screenshots/
 .DS_Store

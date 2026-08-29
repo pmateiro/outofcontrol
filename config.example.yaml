@@ -10,6 +10,10 @@ max_tool_rounds: 20
 shell_confirm_sensitive: true
 calendar_path: data/calendar.json
 memory_path: data/memory.json
+tasks_path: data/tasks.json
+knowledge_dir: docs
+github_repo: null         # optional default owner/name
+browser_enabled: true
 # Patterns that trigger confirmation before running (regex, case-insensitive)
 sensitive_shell_patterns:
   - "\\brm\\b"

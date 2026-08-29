@@ -8,6 +8,8 @@ workspace: .              # default working directory for file/shell tools
 skills_dir: skills
 max_tool_rounds: 20
 shell_confirm_sensitive: true
+calendar_path: data/calendar.json
+memory_path: data/memory.json
 # Patterns that trigger confirmation before running (regex, case-insensitive)
 sensitive_shell_patterns:
   - "\\brm\\b"

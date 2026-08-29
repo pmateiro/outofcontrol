@@ -9,8 +9,11 @@ Estilo próximo ao agente do Cursor: linguagem natural → tools → resultado, 
 - **CLI** interativa (`chat`) e **API HTTP** (`serve`)
 - **Providers**: `openai` (padrão) e `ollama` (API compatível)
 - **Skills** em `skills/*/SKILL.md` (`list_skills` / `load_skill`)
-- **Tools**: arquivos, shell (com confirmação em comandos sensíveis), web search/fetch, calendário local
-- Escopo **geral** (não só o repo): web, calendário, shell, etc.
+- **Tools de código**: `read_file`, `write_file`, `edit_file`, `delete_file`, `grep`, `glob_files`, `list_dir`
+- **Shell** com confirmação em comandos sensíveis; **`confirm_action`** também para deletes
+- **Web** search/fetch, **calendário** local, **memória** persistente (`memory_*`)
+- Skills de exemplo: `repo-edit`, `git-workflow`, `web-research`, `daily-planning`, `memory`
+- Escopo **geral** (não só o repo): web, calendário, shell, memória, etc.
 
 ## Setup
 
@@ -34,7 +37,7 @@ outofcontrol chat
 ```
 
 No REPL: `/reset` limpa histórico, `/exit` sai.  
-Comandos sensíveis de shell pedem confirmação no terminal.
+Ações sensíveis (`rm`/sudo/`git push`, `delete_file`, etc.) pedem confirmação no terminal.
 
 ## API HTTP
 

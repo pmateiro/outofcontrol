@@ -1,25 +1,11 @@
 from __future__ import annotations
 
 import re
-import secrets
 import subprocess
 from pathlib import Path
-from typing import Any
 
 from outofcontrol.tools.base import ConfirmCallback, ToolRegistry, ToolResult, ToolSpec
-
-
-class PendingShell:
-    def __init__(self) -> None:
-        self._pending: dict[str, dict[str, Any]] = {}
-
-    def store(self, command: str, cwd: str) -> str:
-        token = secrets.token_urlsafe(12)
-        self._pending[token] = {"command": command, "cwd": cwd}
-        return token
-
-    def pop(self, token: str) -> dict[str, Any] | None:
-        return self._pending.pop(token, None)
+from outofcontrol.tools.pending import PendingConfirmations
 
 
 def _is_sensitive(command: str, patterns: list[str]) -> bool:
@@ -55,7 +41,7 @@ def register_shell_tools(
     patterns: list[str],
     confirm_sensitive: bool,
     confirm: ConfirmCallback | None,
-    pending: PendingShell,
+    pending: PendingConfirmations,
 ) -> None:
     def run_shell(command: str, timeout_seconds: int = 120) -> ToolResult:
         if not command or not str(command).strip():
@@ -67,34 +53,26 @@ def register_shell_tools(
                 if not approved:
                     return ToolResult(ok=False, output="User denied sensitive shell command")
                 return _run(command, cwd, timeout=timeout_seconds)
-            token = pending.store(command, str(cwd))
+            token = pending.store("shell", {"command": command, "cwd": str(cwd)})
             return ToolResult(
                 ok=False,
                 output=(
                     "Sensitive command requires confirmation. "
-                    "Call confirm_shell with the confirmation_token to proceed, "
+                    "Call confirm_action with the confirmation_token to proceed, "
                     "or tell the user and wait."
                 ),
                 needs_confirmation=True,
                 confirmation_token=token,
-                meta={"command": command},
+                meta={"kind": "shell", "command": command},
             )
         return _run(command, cwd, timeout=timeout_seconds)
-
-    def confirm_shell(confirmation_token: str, approve: bool = True) -> ToolResult:
-        item = pending.pop(confirmation_token)
-        if not item:
-            return ToolResult(ok=False, output="Invalid or expired confirmation token")
-        if not approve:
-            return ToolResult(ok=False, output="User denied sensitive shell command")
-        return _run(item["command"], Path(item["cwd"]))
 
     registry.register(
         ToolSpec(
             name="run_shell",
             description=(
                 "Run a shell command in the workspace. "
-                "Sensitive commands may require confirmation."
+                "Sensitive commands may require confirmation via confirm_action."
             ),
             parameters={
                 "type": "object",
@@ -110,22 +88,5 @@ def register_shell_tools(
             },
             handler=run_shell,
             sensitive=True,
-        )
-    )
-    registry.register(
-        ToolSpec(
-            name="confirm_shell",
-            description=(
-                "Approve or deny a pending sensitive shell command using its confirmation_token."
-            ),
-            parameters={
-                "type": "object",
-                "properties": {
-                    "confirmation_token": {"type": "string"},
-                    "approve": {"type": "boolean", "default": True},
-                },
-                "required": ["confirmation_token"],
-            },
-            handler=confirm_shell,
         )
     )

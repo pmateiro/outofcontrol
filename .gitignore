@@ -12,4 +12,5 @@ config.yaml
 .ruff_cache/
 *.log
 data/calendar.json
+data/memory.json
 .DS_Store

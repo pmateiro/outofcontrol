@@ -32,20 +32,31 @@ mkdir -p "$(dirname "$EXT_DST")"
 rsync -a --delete "$EXT_SRC/" "$EXT_DST/"
 glib-compile-schemas "$EXT_DST/schemas"
 
-echo "==> Installing systemd user unit"
+echo "==> Installing systemd user unit + askpass"
 mkdir -p "$(dirname "$UNIT_DST")" "$ENV_DIR"
+chmod +x "$ROOT/desktop/askpass/ooc-askpass" "$ROOT/desktop/outofcontrol-daemon.sh"
+# Keep askpass executable in the installed tree too
+chmod +x "$APP_DST/desktop/askpass/ooc-askpass" "$APP_DST/desktop/outofcontrol-daemon.sh"
 install -m 644 "$ROOT/desktop/systemd/outofcontrol.service" "$UNIT_DST"
 if [[ ! -f "$ENV_FILE" ]]; then
   cat >"$ENV_FILE" <<'EOF'
 # OPENAI_API_KEY=sk-...
 # GITHUB_TOKEN=
 # GOOGLE_CALENDAR_ACCESS_TOKEN=
+# Optional: passwordless sudo for specific commands (advanced) — see desktop/README.md
 EOF
   echo "Wrote $ENV_FILE — add OPENAI_API_KEY there."
 fi
 
+# Ensure zenity for graphical sudo prompts
+if ! command -v zenity >/dev/null 2>&1; then
+  echo "NOTE: zenity not found. Install it for sudo password dialogs: sudo apt install zenity"
+fi
+
 systemctl --user daemon-reload
 systemctl --user enable --now outofcontrol.service
+# Prefer graphical session binding when available
+systemctl --user add-wants graphical-session.target outofcontrol.service 2>/dev/null || true
 
 echo "==> Enabling extension (may require Wayland/X session)"
 if command -v gnome-extensions >/dev/null 2>&1; then
@@ -61,6 +72,7 @@ Next:
   2. systemctl --user restart outofcontrol.service
   3. Log out/in or Alt+F2 → r (X11) / restart GNOME Shell to load the extension
   4. Toggle with Super+Shift+A (or click ⌀ in the top bar)
+  5. For sudo: Approve in the overlay, then enter your password in the zenity dialog
 
 Health check:
   curl -s http://127.0.0.1:8000/health

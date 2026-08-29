@@ -185,6 +185,31 @@ def test_github_status_tool_exists(tmp_path: Path):
     assert result.output
 
 
+def test_sudo_askpass_injection(tmp_path: Path, monkeypatch):
+    from outofcontrol.tools.shell import _inject_sudo_askpass, _run
+
+    assert _inject_sudo_askpass("sudo apt update") == "sudo -A apt update"
+    assert _inject_sudo_askpass("sudo -A apt update") == "sudo -A apt update"
+    ask = tmp_path / "askpass"
+    ask.write_text("#!/bin/sh\necho\n", encoding="utf-8")
+    ask.chmod(0o755)
+    monkeypatch.setenv("OOC_ASKPASS", str(ask))
+    # Non-sudo still works
+    result = _run("echo ok-sudo-path", tmp_path)
+    assert result.ok
+    assert "ok-sudo-path" in result.output
+
+
+def test_sudo_without_askpass_is_clear(tmp_path: Path, monkeypatch):
+    from outofcontrol.tools.shell import _run
+
+    monkeypatch.setenv("OOC_ASKPASS", str(tmp_path / "missing"))
+    monkeypatch.setenv("SUDO_ASKPASS", str(tmp_path / "missing"))
+    result = _run("sudo true", tmp_path)
+    assert not result.ok
+    assert "askpass" in result.output.lower() or "zenity" in result.output.lower()
+
+
 def test_repo_skills_present():
     root = Path(__file__).resolve().parents[1]
     loader = SkillLoader(root / "skills")

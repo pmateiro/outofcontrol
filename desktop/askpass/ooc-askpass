@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Graphical askpass for sudo when OutOfControl runs without a TTY (GNOME daemon).
+# Used via: SUDO_ASKPASS=... sudo -A <command>
+set -euo pipefail
+
+PROMPT="${1:-Authentication required for OutOfControl}"
+
+# Prefer native dialogs available on the desktop session.
+if command -v zenity >/dev/null 2>&1; then
+  zenity --password --title="OutOfControl" --text="$PROMPT" 2>/dev/null || exit 1
+  exit 0
+fi
+
+if command -v yad >/dev/null 2>&1; then
+  yad --entry --entry-text="" --hide-text --title="OutOfControl" --text="$PROMPT" 2>/dev/null || exit 1
+  exit 0
+fi
+
+if command -v kdialog >/dev/null 2>&1; then
+  kdialog --password "$PROMPT" 2>/dev/null || exit 1
+  exit 0
+fi
+
+if command -v ssh-askpass >/dev/null 2>&1; then
+  ssh-askpass "$PROMPT" 2>/dev/null || exit 1
+  exit 0
+fi
+
+# Last resort: pkexec cannot act as askpass; fail clearly.
+echo "No graphical askpass found (install zenity)." >&2
+exit 1

@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     knowledge_dir: Path = Path("docs")
     github_repo: str | None = None  # owner/name default for GitHub tools
     browser_enabled: bool = True
+    default_remind_minutes: list[int] = Field(default_factory=lambda: [60, 15])
+    reminder_poll_seconds: float = 60.0
+    reminder_desktop: bool = True
+    reminder_webhook_url: str | None = None
     system_prompt_extra: str = ""
 
     @classmethod

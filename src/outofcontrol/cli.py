@@ -99,5 +99,42 @@ def serve(
     uvicorn.run(api, host=host, port=port)
 
 
+@app.command("watch")
+def watch(
+    once: bool = typer.Option(False, "--once", help="Check once and exit"),
+    interval: Optional[float] = typer.Option(
+        None, "--interval", "-i", help="Poll interval seconds (default from config)"
+    ),
+    config: Optional[Path] = typer.Option(None, "--config", "-c"),
+    no_desktop: bool = typer.Option(
+        False, "--no-desktop", help="Skip notify-send desktop notifications"
+    ),
+) -> None:
+    """Watch the local calendar and fire due reminders (console + optional desktop/webhook)."""
+    from outofcontrol.reminders import build_notifiers, run_loop
+
+    settings = Settings.load(config)
+    calendar_path = settings.resolve_calendar_path()
+    poll = interval if interval is not None else settings.reminder_poll_seconds
+    notifiers = build_notifiers(
+        desktop=settings.reminder_desktop and not no_desktop,
+        webhook_url=settings.reminder_webhook_url,
+    )
+    console.print(
+        f"Watching [cyan]{calendar_path}[/cyan] "
+        f"(interval={poll}s, once={once})"
+    )
+    try:
+        run_loop(
+            calendar_path,
+            interval_seconds=poll,
+            defaults=settings.default_remind_minutes,
+            notifiers=notifiers,
+            once=once,
+        )
+    except KeyboardInterrupt:
+        console.print("\n[dim]Stopped watching[/dim]")
+
+
 if __name__ == "__main__":
     app()

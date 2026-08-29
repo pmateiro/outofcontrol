@@ -15,6 +15,7 @@ Estilo próximo ao agente do Cursor: linguagem natural → tools → resultado, 
 - **Knowledge** em `docs/` (`knowledge_*`)
 - **GitHub**: issues, PRs, CI (`gh` ou `GITHUB_TOKEN`)
 - **Skills**: `repo-edit`, `git-workflow`, `web-research`, `daily-planning`, `memory`, `triage-issue`, `pr-helper`, `meeting-notes`, `watch-ci`, `verify-ui`, `knowledge-search`
+- **GNOME copilot (option 3)**: overlay + systemd user service — see [`desktop/README.md`](desktop/README.md)
 
 ## Setup
 

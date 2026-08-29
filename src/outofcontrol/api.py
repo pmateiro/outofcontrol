@@ -11,9 +11,13 @@ from outofcontrol.tools import PendingConfirmations
 
 
 class ChatRequest(BaseModel):
-    message: str = Field(min_length=1)
+    message: str = ""
     reset: bool = False
     session_id: str = "default"
+    context: str | None = Field(
+        default=None,
+        description="Optional desktop context (selection/clipboard) prepended for the agent",
+    )
 
 
 class ConfirmRequest(BaseModel):
@@ -62,8 +66,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         agent = sess["agent"]
         if req.reset:
             agent.reset()
+            if not (req.message or "").strip():
+                return ChatResponse(reply="Session reset.", pending_confirmations=[], tool_trace=[])
+        text = (req.message or "").strip()
+        if not text:
+            raise HTTPException(status_code=400, detail="message is required unless reset=true")
+        if req.context and req.context.strip():
+            text = (
+                "[Desktop context — selection or clipboard]\n"
+                f"{req.context.strip()}\n\n"
+                f"[User request]\n{text}"
+            )
         try:
-            result = agent.run(req.message)
+            result = agent.run(text)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e)) from e
         return ChatResponse(

@@ -12,7 +12,7 @@ Desktop copilot: GNOME Shell overlay + local OutOfControl API.
 
 ## Requirements
 
-- GNOME Shell 45–48
+- GNOME Shell 45–50
 - Python 3.11+
 - `glib-compile-schemas`, `rsync`, `systemctl --user`
 

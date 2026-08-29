@@ -15,6 +15,10 @@ def _registry(tmp_path: Path, *, confirm=None, confirm_sensitive: bool = True):
         skills=skills,
         calendar_path=tmp_path / "cal.json",
         memory_path=tmp_path / "mem.json",
+        tasks_path=tmp_path / "tasks.json",
+        knowledge_dir=tmp_path / "docs",
+        github_repo=None,
+        browser_enabled=True,
         sensitive_patterns=[r"\brm\b", r"\bsudo\b", r"\bgit\s+push\b"],
         confirm_sensitive=confirm_sensitive,
         confirm=confirm,
@@ -96,8 +100,59 @@ def test_memory_and_calendar(tmp_path: Path):
     assert "Standup" in registry.call("calendar_list", {}).output
 
 
+def test_tasks_and_knowledge(tmp_path: Path):
+    registry, _ = _registry(tmp_path, confirm=lambda *_: True)
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    (docs / "guide.md").write_text("# Deploy\nUse blue-green deploys.\n", encoding="utf-8")
+    listed = registry.call("knowledge_list", {})
+    assert "guide.md" in listed.output
+    found = registry.call("knowledge_search", {"query": "blue-green"})
+    assert "guide.md" in found.output
+    assert "blue-green" in registry.call("knowledge_read", {"path": "guide.md"}).output
+    created = registry.call(
+        "task_add",
+        {"title": "Ship P1", "assignee": "pedro", "source": "standup"},
+    )
+    assert created.ok
+    assert "Ship P1" in registry.call("task_list", {}).output
+
+
+def test_gcal_and_browser_graceful(tmp_path: Path):
+    registry, _ = _registry(tmp_path, confirm=lambda *_: True)
+    status = registry.call("gcal_status", {})
+    assert not status.ok
+    assert "GOOGLE_CALENDAR_ACCESS_TOKEN" in status.output
+    # Playwright may or may not be installed; tool should still respond cleanly
+    browser = registry.call("browser_fetch", {"url": "https://example.com"})
+    assert isinstance(browser.ok, bool)
+    assert browser.output
+
+
+def test_github_status_tool_exists(tmp_path: Path):
+    registry, _ = _registry(tmp_path)
+    assert "github_status" in registry.names()
+    assert "github_ci_list" in registry.names()
+    result = registry.call("github_status", {})
+    # May succeed if gh is authenticated in this environment
+    assert result.output
+
+
 def test_repo_skills_present():
     root = Path(__file__).resolve().parents[1]
     loader = SkillLoader(root / "skills")
     names = {s.name for s in loader.all()}
-    assert {"repo-edit", "web-research", "daily-planning", "git-workflow", "memory"} <= names
+    expected = {
+        "repo-edit",
+        "web-research",
+        "daily-planning",
+        "git-workflow",
+        "memory",
+        "triage-issue",
+        "pr-helper",
+        "meeting-notes",
+        "watch-ci",
+        "verify-ui",
+        "knowledge-search",
+    }
+    assert expected <= names

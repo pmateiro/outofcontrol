@@ -17,6 +17,12 @@ console = Console()
 def _cli_confirm(tool: str, payload: dict) -> bool:
     if tool == "delete_file":
         body = f"[bold yellow]Sensitive {tool}[/bold yellow]\n\nPath: [cyan]{payload.get('path')}[/cyan]"
+    elif tool == "github_pr_merge":
+        body = (
+            f"[bold yellow]Sensitive {tool}[/bold yellow]\n\n"
+            f"PR: [cyan]#{payload.get('number')}[/cyan] "
+            f"repo={payload.get('repo')} method={payload.get('method')}"
+        )
     else:
         body = (
             f"[bold yellow]Sensitive {tool}[/bold yellow]\n\n"

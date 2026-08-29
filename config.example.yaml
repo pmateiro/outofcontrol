@@ -1,0 +1,24 @@
+# Copy to config.yaml or set env vars (see README).
+
+provider: openai          # openai | ollama
+model: gpt-4.1-mini
+openai_base_url: null     # optional custom OpenAI-compatible endpoint
+ollama_base_url: http://127.0.0.1:11434/v1
+workspace: .              # default working directory for file/shell tools
+skills_dir: skills
+max_tool_rounds: 20
+shell_confirm_sensitive: true
+# Patterns that trigger confirmation before running (regex, case-insensitive)
+sensitive_shell_patterns:
+  - "\\brm\\b"
+  - "\\bsudo\\b"
+  - "\\bmkfs\\b"
+  - "\\bdd\\b"
+  - "\\bshutdown\\b"
+  - "\\breboot\\b"
+  - "\\bchmod\\s+777\\b"
+  - ">\\s*/"
+  - "\\bcurl\\b.*\\|\\s*(ba)?sh"
+  - "\\bwget\\b.*\\|\\s*(ba)?sh"
+  - "\\bgit\\s+push\\b"
+  - "\\bgit\\s+reset\\s+--hard\\b"

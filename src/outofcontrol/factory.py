@@ -31,6 +31,7 @@ def create_agent(
         confirm_sensitive=settings.shell_confirm_sensitive,
         confirm=confirm,
         pending_shell=pending_shell,
+        default_remind_minutes=settings.default_remind_minutes,
     )
     provider = create_provider(settings)
     agent = Agent(

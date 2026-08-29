@@ -84,7 +84,7 @@ class Agent:
         tool_trace: list[dict[str, Any]] = []
 
         for _ in range(self.max_tool_rounds):
-            self._emit("model_start", {})
+            self._emit("model_start")
             completion = self.provider.complete(messages, tools=self.registry.schemas())
             assistant = completion.message
             messages.append(assistant)

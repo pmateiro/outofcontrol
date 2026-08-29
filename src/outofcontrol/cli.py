@@ -15,15 +15,16 @@ console = Console()
 
 
 def _cli_confirm(tool: str, payload: dict) -> bool:
-    console.print(
-        Panel(
+    if tool == "delete_file":
+        body = f"[bold yellow]Sensitive {tool}[/bold yellow]\n\nPath: [cyan]{payload.get('path')}[/cyan]"
+    else:
+        body = (
             f"[bold yellow]Sensitive {tool}[/bold yellow]\n\n"
             f"Command: [cyan]{payload.get('command')}[/cyan]\n"
-            f"cwd: {payload.get('cwd')}",
-            title="Confirmation required",
+            f"cwd: {payload.get('cwd')}"
         )
-    )
-    return typer.confirm("Allow this command?", default=False)
+    console.print(Panel(body, title="Confirmation required"))
+    return typer.confirm("Allow this action?", default=False)
 
 
 @app.command()

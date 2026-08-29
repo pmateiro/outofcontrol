@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from outofcontrol.config import Settings
 from outofcontrol.factory import create_agent
-from outofcontrol.tools.shell import PendingShell
+from outofcontrol.tools import PendingConfirmations
 
 
 class ChatRequest(BaseModel):
@@ -36,12 +36,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.load()
     app = FastAPI(title="OutOfControl Agent", version="0.1.0")
 
-    # Per-session agents share pending shell tokens via PendingShell instances
     sessions: dict[str, Any] = {}
 
     def get_session(session_id: str):
         if session_id not in sessions:
-            pending = PendingShell()
+            pending = PendingConfirmations()
             agent, pending, _ = create_agent(settings, confirm=None, pending_shell=pending)
             sessions[session_id] = {"agent": agent, "pending": pending}
         return sessions[session_id]
@@ -77,28 +76,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def confirm(req: ConfirmRequest) -> ChatResponse:
         sess = get_session(req.session_id)
         agent = sess["agent"]
-        # Execute confirmation via tool path the model would use
         from outofcontrol.tools.base import ToolResult
 
         result: ToolResult = agent.registry.call(
-            "confirm_shell",
+            "confirm_action",
             {"confirmation_token": req.confirmation_token, "approve": req.approve},
         )
         follow = req.follow_up or (
-            "The user approved the sensitive command. Continue with the task."
+            "The user approved the sensitive action. Continue with the task."
             if req.approve
-            else "The user denied the sensitive command. Acknowledge and suggest an alternative."
+            else "The user denied the sensitive action. Acknowledge and suggest an alternative."
         )
-        # Inject tool outcome into a user turn for continuity
-        turn = agent.run(
-            f"{follow}\n\nConfirmation result: {result.as_tool_message()}"
-        )
+        turn = agent.run(f"{follow}\n\nConfirmation result: {result.as_tool_message()}")
         return ChatResponse(
             reply=turn.reply,
             pending_confirmations=turn.pending_confirmations,
             tool_trace=[
                 {
-                    "name": "confirm_shell",
+                    "name": "confirm_action",
                     "ok": result.ok,
                     "output_preview": result.output[:500],
                 },

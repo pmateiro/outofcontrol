@@ -4,18 +4,17 @@ from outofcontrol.agent.loop import Agent
 from outofcontrol.config import Settings
 from outofcontrol.providers import create_provider
 from outofcontrol.skills_loader import SkillLoader
-from outofcontrol.tools import build_registry
+from outofcontrol.tools import PendingConfirmations, build_registry
 from outofcontrol.tools.base import ConfirmCallback
-from outofcontrol.tools.shell import PendingShell
 
 
 def create_agent(
     settings: Settings | None = None,
     *,
     confirm: ConfirmCallback | None = None,
-    pending_shell: PendingShell | None = None,
+    pending_shell: PendingConfirmations | None = None,
     on_event=None,
-) -> tuple[Agent, PendingShell, Settings]:
+) -> tuple[Agent, PendingConfirmations, Settings]:
     settings = settings or Settings.load()
     workspace = settings.resolve_workspace()
     skills = SkillLoader(settings.resolve_skills_dir())
@@ -23,6 +22,7 @@ def create_agent(
         workspace=workspace,
         skills=skills,
         calendar_path=settings.resolve_calendar_path(),
+        memory_path=settings.resolve_memory_path(),
         sensitive_patterns=settings.sensitive_shell_patterns,
         confirm_sensitive=settings.shell_confirm_sensitive,
         confirm=confirm,

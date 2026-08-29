@@ -42,6 +42,7 @@ class Settings(BaseSettings):
         ]
     )
     calendar_path: Path = Path("data/calendar.json")
+    memory_path: Path = Path("data/memory.json")
     system_prompt_extra: str = ""
 
     @classmethod
@@ -70,6 +71,12 @@ class Settings(BaseSettings):
 
     def resolve_calendar_path(self) -> Path:
         p = self.calendar_path
+        if not p.is_absolute():
+            p = self.resolve_workspace() / p
+        return p.resolve()
+
+    def resolve_memory_path(self) -> Path:
+        p = self.memory_path
         if not p.is_absolute():
             p = self.resolve_workspace() / p
         return p.resolve()

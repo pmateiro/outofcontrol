@@ -98,6 +98,53 @@ def test_memory_and_calendar(tmp_path: Path):
     add = registry.call("calendar_add", {"title": "Standup", "start": "2026-08-30 09:00"})
     assert add.ok
     assert "Standup" in registry.call("calendar_list", {}).output
+    assert "remind_minutes_before" in add.output
+
+
+def test_calendar_reminders_tick(tmp_path: Path):
+    from datetime import datetime, timedelta, timezone
+
+    from outofcontrol.reminders import find_due_reminders, tick
+    from outofcontrol.tools.calendar import load_events
+
+    cal = tmp_path / "cal.json"
+    registry, _ = _registry(tmp_path, confirm=lambda *_: True)
+    start = datetime(2026, 8, 30, 12, 0, tzinfo=timezone.utc)
+    add = registry.call(
+        "calendar_add",
+        {
+            "title": "Demo",
+            "start": start.isoformat(),
+            "remind_minutes_before": [15, 0],
+        },
+    )
+    assert add.ok
+
+    # Too early — nothing due
+    early = start - timedelta(minutes=30)
+    assert find_due_reminders(load_events(cal), now=early) == []
+
+    # 15 min window
+    near = start - timedelta(minutes=10)
+    fired: list[tuple[str, str]] = []
+
+    def capture(title: str, body: str, _event) -> None:
+        fired.append((title, body))
+
+    due = tick(cal, now=near, notifiers=[capture])
+    assert len(due) == 1
+    assert due[0].minutes_before == 15
+    assert fired and fired[0][0] == "Demo"
+
+    # Same reminder must not fire twice
+    assert tick(cal, now=near, notifiers=[capture]) == []
+
+    # At start, the 0-minute reminder fires
+    at_start = tick(cal, now=start, notifiers=[capture])
+    assert len(at_start) == 1
+    assert at_start[0].minutes_before == 0
+    event = load_events(cal)[0]
+    assert set(event["reminders_sent"]) == {15, 0}
 
 
 def test_tasks_and_knowledge(tmp_path: Path):

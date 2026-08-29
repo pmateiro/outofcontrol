@@ -7,7 +7,8 @@ PROMPT="${1:-Authentication required for OutOfControl}"
 
 # Prefer native dialogs available on the desktop session.
 if command -v zenity >/dev/null 2>&1; then
-  zenity --password --title="OutOfControl" --text="$PROMPT" 2>/dev/null || exit 1
+  # --modal helps keep the password prompt above other app windows (after OOC overlay closes).
+  zenity --password --modal --title="OutOfControl — sudo" --text="$PROMPT" 2>/dev/null || exit 1
   exit 0
 fi
 

@@ -40,6 +40,7 @@ def build_registry(
     confirm_sensitive: bool,
     confirm: ConfirmCallback | None = None,
     pending_shell: PendingConfirmations | None = None,
+    default_remind_minutes: list[int] | None = None,
 ) -> tuple[ToolRegistry, PendingConfirmations]:
     registry = ToolRegistry()
     pending = pending_shell or PendingConfirmations()
@@ -76,7 +77,11 @@ def build_registry(
         },
     )
     register_web_tools(registry)
-    register_calendar_tools(registry, calendar_path=calendar_path)
+    register_calendar_tools(
+        registry,
+        calendar_path=calendar_path,
+        default_remind_minutes=default_remind_minutes,
+    )
     register_google_calendar_tools(registry)
     register_memory_tools(registry, memory_path=memory_path)
     register_task_tools(registry, tasks_path=tasks_path)

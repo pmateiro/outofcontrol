@@ -10,21 +10,30 @@ from dateutil import parser as date_parser
 
 from outofcontrol.tools.base import ToolRegistry, ToolResult, ToolSpec
 
+DEFAULT_REMIND_MINUTES = [60, 15]
 
-def _load(path: Path) -> list[dict[str, Any]]:
+
+def load_events(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _save(path: Path, events: list[dict[str, Any]]) -> None:
+def save_events(path: Path, events: list[dict[str, Any]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def register_calendar_tools(registry: ToolRegistry, *, calendar_path: Path) -> None:
+def register_calendar_tools(
+    registry: ToolRegistry,
+    *,
+    calendar_path: Path,
+    default_remind_minutes: list[int] | None = None,
+) -> None:
+    defaults = list(default_remind_minutes or DEFAULT_REMIND_MINUTES)
+
     def calendar_list(from_iso: str | None = None, to_iso: str | None = None) -> ToolResult:
-        events = _load(calendar_path)
+        events = load_events(calendar_path)
         start = date_parser.isoparse(from_iso) if from_iso else None
         end = date_parser.isoparse(to_iso) if to_iso else None
         filtered = []
@@ -43,29 +52,37 @@ def register_calendar_tools(registry: ToolRegistry, *, calendar_path: Path) -> N
         start: str,
         end: str | None = None,
         notes: str = "",
+        remind_minutes_before: list[int] | None = None,
     ) -> ToolResult:
-        # Accept human-friendly dates via dateutil
         start_dt = date_parser.parse(start)
         end_dt = date_parser.parse(end) if end else None
-        events = _load(calendar_path)
+        reminders = (
+            list(remind_minutes_before)
+            if remind_minutes_before is not None
+            else list(defaults)
+        )
+        reminders = sorted({int(m) for m in reminders if int(m) >= 0}, reverse=True)
+        events = load_events(calendar_path)
         event = {
             "id": str(uuid.uuid4()),
             "title": title,
             "start": start_dt.isoformat(),
             "end": end_dt.isoformat() if end_dt else None,
             "notes": notes,
+            "remind_minutes_before": reminders,
+            "reminders_sent": [],
             "created_at": datetime.now().astimezone().isoformat(),
         }
         events.append(event)
-        _save(calendar_path, events)
+        save_events(calendar_path, events)
         return ToolResult(ok=True, output=json.dumps(event, ensure_ascii=False, indent=2))
 
     def calendar_delete(event_id: str) -> ToolResult:
-        events = _load(calendar_path)
+        events = load_events(calendar_path)
         new_events = [e for e in events if e.get("id") != event_id]
         if len(new_events) == len(events):
             return ToolResult(ok=False, output=f"Event not found: {event_id}")
-        _save(calendar_path, new_events)
+        save_events(calendar_path, new_events)
         return ToolResult(ok=True, output=f"Deleted event {event_id}")
 
     registry.register(
@@ -85,7 +102,10 @@ def register_calendar_tools(registry: ToolRegistry, *, calendar_path: Path) -> N
     registry.register(
         ToolSpec(
             name="calendar_add",
-            description="Add an event to the local calendar store.",
+            description=(
+                "Add an event to the local calendar store. "
+                "Optional remind_minutes_before (e.g. [60, 15]) controls desktop/watch alerts."
+            ),
             parameters={
                 "type": "object",
                 "properties": {
@@ -96,6 +116,11 @@ def register_calendar_tools(registry: ToolRegistry, *, calendar_path: Path) -> N
                     },
                     "end": {"type": "string"},
                     "notes": {"type": "string"},
+                    "remind_minutes_before": {
+                        "type": "array",
+                        "items": {"type": "integer"},
+                        "description": "Minutes before start to notify (default [60, 15])",
+                    },
                 },
                 "required": ["title", "start"],
             },

@@ -14,6 +14,10 @@ tasks_path: data/tasks.json
 knowledge_dir: docs
 github_repo: null         # optional default owner/name
 browser_enabled: true
+default_remind_minutes: [60, 15]   # used by calendar_add + watch defaults
+reminder_poll_seconds: 60
+reminder_desktop: true             # notify-send when available
+reminder_webhook_url: null         # optional POST JSON endpoint
 # Patterns that trigger confirmation before running (regex, case-insensitive)
 sensitive_shell_patterns:
   - "\\brm\\b"

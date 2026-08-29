@@ -2,8 +2,8 @@
   "uuid": "outofcontrol@outofcontrol.local",
   "name": "OutOfControl Copilot",
   "description": "Desktop copilot overlay for the OutOfControl local agent (chat + confirmations).",
-  "version": 1,
-  "shell-version": ["45", "46", "47", "48"],
+  "version": 2,
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
   "url": "https://github.com/pmateiro/outofcontrol",
   "settings-schema": "org.gnome.shell.extensions.outofcontrol"
 }
